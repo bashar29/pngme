@@ -1,50 +1,47 @@
-use std::fmt::Display;
-
 use anyhow::bail;
-
-
+use std::fmt::Display;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ChunkType {
-    type_str : String,
+    type_str: String,
 }
 
 impl ChunkType {
-    
     /// Convert internal representation of ChunkType in an array of u8
-    fn bytes(&self) -> [u8; 4] {
-        let mut bytes:[u8; 4] = [0,0,0,0];
-        let mut cpt = 0; 
+    pub fn bytes(&self) -> [u8; 4] {
+        let mut bytes: [u8; 4] = [0, 0, 0, 0];
+
+        let mut cpt = 0;
         for b in self.type_str.as_bytes() {
             bytes[cpt] = *b;
             cpt += 1;
         }
+        //dbg!(&bytes);
         bytes
     }
 
     /// Valid if reserved bit is valid and all bytes are represented
     /// by A-Z or a-z characters
-    fn is_valid(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         if self.is_reserved_bit_valid() == true {
             for byte in self.bytes() {
                 if byte.is_ascii_lowercase() == false && byte.is_ascii_uppercase() == false {
                     return false;
                 }
             }
-        }
-        else {
+        } else {
             return false;
         }
         true
     }
 
-    /// Spec : 
+    /// Spec :
     /// Ancillary bit: bit 5 of first byte
     /// 0 (uppercase) = critical, 1 (lowercase) = ancillary.
     /// # Examples
     /// ChunkType::from_str("RuSt").unwrap();
-    //  assert_eq!(expected, actual); 
-    fn is_critical(&self) -> bool {
+    ///  assert_eq!(expected, actual);
+    pub fn is_critical(&self) -> bool {
         let byte_to_check = self.bytes()[0];
         if byte_to_check & 0b00100000 == 32 {
             return false;
@@ -54,7 +51,7 @@ impl ChunkType {
 
     /// Spec : Private bit: bit 5 of second byte
     /// 0 (uppercase) = public, 1 (lowercase) = private.
-    fn is_public(&self) -> bool {
+    pub fn is_public(&self) -> bool {
         let byte_to_check = self.bytes()[1];
         if byte_to_check & 0b00100000 == 32 {
             return false;
@@ -64,7 +61,7 @@ impl ChunkType {
 
     /// Reserved bit: bit 5 of third byte
     /// Must be 0 (uppercase) in files conforming to this version of PNG.
-    fn is_reserved_bit_valid(&self) -> bool {
+    pub fn is_reserved_bit_valid(&self) -> bool {
         let byte_to_check = self.bytes()[2];
         if byte_to_check & 0b00100000 == 32 {
             return false;
@@ -74,52 +71,48 @@ impl ChunkType {
 
     ///Safe-to-copy bit: bit 5 of fourth byte
     /// 0 (uppercase) = unsafe to copy, 1 (lowercase) = safe to copy.
-    fn is_safe_to_copy(&self) -> bool {
+    pub fn is_safe_to_copy(&self) -> bool {
         let byte_to_check = self.bytes()[3];
         if byte_to_check & 0b00100000 == 0 {
             return false;
         }
         true
     }
-
-
 }
 
 impl TryFrom<[u8; 4]> for ChunkType {
-
     type Error = crate::Error;
 
     fn try_from(array: [u8; 4]) -> Result<Self, Self::Error> {
-
         for b in array {
             if b.is_ascii() == false {
-                bail!("no ASCII input");
+                bail!("Input not in A-Z or a-z");
             }
         }
         let v = array.to_vec();
         let s: String = String::from_utf8(v).unwrap();
-        let ct: ChunkType = ChunkType{type_str: s};
+        let ct: ChunkType = ChunkType { type_str: s };
         Ok(ct)
     }
 }
 
 impl std::str::FromStr for ChunkType {
-    
     type Err = crate::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         for b in s.as_bytes() {
-            if b.is_ascii_lowercase() == false &&  b.is_ascii_uppercase() == false {
-                bail!("no ASCII input");
+            if b.is_ascii_lowercase() == false && b.is_ascii_uppercase() == false {
+                bail!("Input not in A-Z or a-z");
             }
         }
-        let ct: ChunkType = ChunkType{type_str: s.to_string()};
-        Ok(ct)     
+        let ct: ChunkType = ChunkType {
+            type_str: s.to_string(),
+        };
+        Ok(ct)
     }
 }
 
 impl Display for ChunkType {
-    
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.type_str)
     }
@@ -223,4 +216,3 @@ mod tests {
         let _are_chunks_equal = chunk_type_1 == chunk_type_2;
     }
 }
-
