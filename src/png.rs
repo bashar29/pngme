@@ -1,6 +1,6 @@
 use crate::Result;
-use anyhow::bail;
 use crate::{chunk::Chunk, chunk_type::ChunkType};
+use anyhow::bail;
 use std::fmt::Display;
 
 pub struct Png {
@@ -75,13 +75,11 @@ impl Png {
 }
 
 impl Display for Png {
-
-    // TODO -> gérer le cas des erreurs.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let header_string = String::from_utf8(self.header.to_vec()).unwrap();
         let chunks = self.as_bytes();
         let chunks_string = String::from_utf8(chunks).unwrap();
-        write!(f,"{} {}",header_string,chunks_string)
+        write!(f, "{} {}", header_string, chunks_string)
     }
 }
 
@@ -89,7 +87,22 @@ impl TryFrom<&[u8]> for Png {
     type Error = crate::Error;
 
     fn try_from(array: &[u8]) -> std::result::Result<Self, Self::Error> {
-        todo!();
+        //let header = &array[0..8];
+        let mut chunks: Vec<Chunk> = Vec::new();
+        let mut index = 8; //after header bytes
+        while index < array.len() {
+            let chunk_len = u32::from_be_bytes([
+                array[index],
+                array[index + 1],
+                array[index + 2],
+                array[index + 3],
+            ]);
+            let chunk = Chunk::try_from(&array[index..chunk_len as usize])?;
+            chunks.push(chunk);
+            index += chunk_len as usize;
+        }
+        let png: Png = Png::from_chunks(chunks);
+        Ok(png)
     }
 }
 

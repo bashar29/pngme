@@ -75,7 +75,6 @@ impl TryFrom<&[u8]> for Chunk {
     type Error = crate::Error;
 
     fn try_from(array: &[u8]) -> std::result::Result<Self, Self::Error> {
-        //dbg!(array);
         let chunk_length = u32::from_be_bytes([array[0], array[1], array[2], array[3]]);
         let r = ChunkType::try_from([array[4], array[5], array[6], array[7]]);
         let chunk_type = match r {
