@@ -1,4 +1,4 @@
-use crate::chunk_type::{self, ChunkType};
+use crate::chunk_type::ChunkType;
 use crate::Result;
 use anyhow::bail;
 use crc::{Crc, CRC_32_ISO_HDLC};
@@ -13,6 +13,8 @@ pub struct Chunk {
 }
 
 impl Chunk {
+    pub const SIZE_WITHOUT_DATA: usize = 12;
+
     pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
         let chunk_length: u32 = data.len().try_into().unwrap();
         let chunk_crc = Self::calculate_crc(&chunk_type.bytes().to_vec(), &data);
@@ -45,11 +47,8 @@ impl Chunk {
     }
 
     pub fn data_as_string(&self) -> Result<String> {
-        let r = String::from_utf8(self.chunk_data.to_vec());
-        match r {
-            Ok(string) => Ok(string),
-            Err(_) => bail!("not UTF-8 bytes"),
-        }
+        let s = String::from_utf8(self.chunk_data.to_vec())?;
+        Ok(s)
     }
 
     pub fn as_bytes(&self) -> Vec<u8> {
@@ -74,13 +73,16 @@ impl Chunk {
 impl TryFrom<&[u8]> for Chunk {
     type Error = crate::Error;
 
+    /// construit à partir d'un tableau d'octets un chunk. Le tableau doit être complet :
+    /// octets de longueur, octets du type, octets data et enfin octets CRC
+    /// le CRC est recalculé pour s'assurer de la consistance du chunk
     fn try_from(array: &[u8]) -> std::result::Result<Self, Self::Error> {
         let chunk_length = u32::from_be_bytes([array[0], array[1], array[2], array[3]]);
-        let r = ChunkType::try_from([array[4], array[5], array[6], array[7]]);
-        let chunk_type = match r {
-            Ok(ct) => ct,
-            Err(_) => bail!("Invalid ChunkType"),
-        };
+        let chunk_type = ChunkType::try_from([array[4], array[5], array[6], array[7]])?;
+        // let chunk_type = match r {
+        //     Ok(ct) => ct,
+        //     Err(_) => bail!("Invalid ChunkType"),
+        // };
         let array_length = array.len();
         let data: &[u8] = &array[8..array_length - 4];
         let v_data = data.to_vec();
@@ -90,7 +92,6 @@ impl TryFrom<&[u8]> for Chunk {
             array[array_length - 2],
             array[array_length - 1],
         ]);
-
         let expected_crc = Chunk::calculate_crc(&chunk_type.bytes().to_vec(), &data.to_vec());
         if expected_crc != chunk_crc {
             bail!("CRC error");

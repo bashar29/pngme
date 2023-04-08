@@ -1,7 +1,10 @@
+use crate::chunk::Chunk;
 use crate::Result;
-use crate::{chunk::Chunk, chunk_type::ChunkType};
 use anyhow::bail;
 use std::fmt::Display;
+use std::fs::File;
+use std::io;
+use std::io::prelude::*;
 
 pub struct Png {
     header: [u8; 8],
@@ -18,10 +21,10 @@ impl Png {
 
         // vérifier que le dernier chunk est de type IEND
         if chunks[0].chunk_type().to_string() != "IHDR" {
-            dbg!("First chunk of the PNG is not IHDR");
+            println!("First chunk of the PNG is not IHDR");
         }
         if chunks[chunks.len() - 1].chunk_type().to_string() != "IEND" {
-            dbg!("Last chunk of the PNG is not IEND");
+            println!("Last chunk of the PNG is not IEND");
         }
 
         let png: Png = Png {
@@ -29,6 +32,21 @@ impl Png {
             chunks: chunks,
         };
         png
+    }
+
+    /// Creates a `Png` from a file path
+    pub fn from_file<P: AsRef<std::path::Path>>(path: P) -> Result<Self> {
+        let filepath = path.as_ref();
+        let filename = filepath.file_name();
+        if let Some(name) = filename {
+            let file = File::open(name)?;
+            let mut reader = io::BufReader::new(file);
+            let mut buffer: Vec<u8> = Vec::new();
+            reader.read_to_end(&mut buffer)?;
+            let png: Png = Png::try_from(buffer.as_slice())?;
+            return Ok(png);
+        }
+        bail!("wrong filename")
     }
 
     fn append_chunk(&mut self, chunk: Chunk) {
@@ -76,9 +94,10 @@ impl Png {
 
 impl Display for Png {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let header_string = String::from_utf8(self.header.to_vec()).unwrap();
+        let header_string =
+            String::from_utf8(self.header.to_vec()).unwrap_or_else(|e| e.to_string());
         let chunks = self.as_bytes();
-        let chunks_string = String::from_utf8(chunks).unwrap();
+        let chunks_string = String::from_utf8(chunks).unwrap_or_else(|e| e.to_string());
         write!(f, "{} {}", header_string, chunks_string)
     }
 }
@@ -87,9 +106,14 @@ impl TryFrom<&[u8]> for Png {
     type Error = crate::Error;
 
     fn try_from(array: &[u8]) -> std::result::Result<Self, Self::Error> {
-        //let header = &array[0..8];
+        // check presence of header
+        let mut index;
+        if array[0..Png::STANDARD_HEADER.len()] == Png::STANDARD_HEADER {
+            index = Png::STANDARD_HEADER.len();
+        } else {
+            bail!("No valid header in input bytes");
+        }
         let mut chunks: Vec<Chunk> = Vec::new();
-        let mut index = 8; //after header bytes
         while index < array.len() {
             let chunk_len = u32::from_be_bytes([
                 array[index],
@@ -97,9 +121,11 @@ impl TryFrom<&[u8]> for Png {
                 array[index + 2],
                 array[index + 3],
             ]);
-            let chunk = Chunk::try_from(&array[index..chunk_len as usize])?;
+            dbg!(chunk_len);
+            let end_range = index + chunk_len as usize + Chunk::SIZE_WITHOUT_DATA;
+            let chunk = Chunk::try_from(&array[index..end_range])?;
             chunks.push(chunk);
-            index += chunk_len as usize;
+            index += chunk_len as usize + 12; // 3 * 4-bytes data not included in chunk_len
         }
         let png: Png = Png::from_chunks(chunks);
         Ok(png)
