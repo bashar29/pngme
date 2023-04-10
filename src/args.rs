@@ -19,31 +19,31 @@ pub enum PnnmeFunctions {
 #[derive(Debug, Args)]
 pub struct EncodeArgs {
     #[arg(short = 'f', long = "file")]
-    file_to_encode: std::path::PathBuf,
+    pub file_to_encode: std::path::PathBuf,
     #[arg(short = 't', long = "type_chunk")]
-    type_chunk: String,
+    pub type_chunk: String,
     #[arg(short = 'm', long = "secret_message")]
-    message_to_encode: String,
+    pub message_to_encode: String,
 }
 
 #[derive(Debug, Args)]
 pub struct DecodeArgs {
     #[arg(short = 'f', long = "file")]
-    file_to_decode: std::path::PathBuf,
+    pub file_with_message: std::path::PathBuf,
     #[arg(short = 't', long = "type_chunk")]
-    type_chunk: String,
+    pub type_chunk: String,
 }
 
 #[derive(Debug, Args)]
 pub struct RemoveArgs {
     #[arg(short = 'f', long = "file")]
-    file_to_remove: std::path::PathBuf,
+    pub file_to_remove: std::path::PathBuf,
     #[arg(short = 't', long = "type_chunk")]
-    type_chunk: String,
+    pub type_chunk: String,
 }
 
 #[derive(Debug, Args)]
 pub struct PrintArgs {
     #[arg(short = 'f', long = "file")]
-    file_to_print: std::path::PathBuf,
+    pub file_to_print: std::path::PathBuf,
 }

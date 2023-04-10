@@ -49,11 +49,11 @@ impl Png {
         bail!("wrong filename")
     }
 
-    fn append_chunk(&mut self, chunk: Chunk) {
+    pub fn append_chunk(&mut self, chunk: Chunk) {
         self.chunks.insert(self.chunks.len() - 2, chunk);
     }
 
-    fn remove_chunk(&mut self, chunk_type: &str) -> Result<Chunk> {
+    pub fn remove_chunk(&mut self, chunk_type: &str) -> Result<Chunk> {
         let mut index = 0;
         for c in &self.chunks {
             if c.chunk_type().to_string() == chunk_type {
@@ -65,15 +65,15 @@ impl Png {
         bail!("chunk type not found in this png");
     }
 
-    fn header(&self) -> &[u8; 8] {
+    pub fn header(&self) -> &[u8; 8] {
         &self.header
     }
 
-    fn chunks(&self) -> &[Chunk] {
+    pub fn chunks(&self) -> &[Chunk] {
         self.chunks.as_slice()
     }
 
-    fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
+    pub fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
         for c in &self.chunks {
             if c.chunk_type().to_string() == chunk_type {
                 return Some(&c);
@@ -82,7 +82,7 @@ impl Png {
         None
     }
 
-    fn as_bytes(&self) -> Vec<u8> {
+    pub fn as_bytes(&self) -> Vec<u8> {
         let mut v = Vec::new();
         v.append(&mut self.header.to_vec().clone());
         for c in &self.chunks {
@@ -121,12 +121,12 @@ impl TryFrom<&[u8]> for Png {
                 array[index + 2],
                 array[index + 3],
             ]);
-            dbg!(chunk_len);
             let end_range = index + chunk_len as usize + Chunk::SIZE_WITHOUT_DATA;
             let chunk = Chunk::try_from(&array[index..end_range])?;
             chunks.push(chunk);
             index += chunk_len as usize + 12; // 3 * 4-bytes data not included in chunk_len
         }
+        log::info!("nombre de chunks de ce png : {}",chunks.len());
         let png: Png = Png::from_chunks(chunks);
         Ok(png)
     }
