@@ -22,8 +22,8 @@ impl ChunkType {
 
     /// Valid if reserved bit is valid and all bytes are represented
     /// by A-Z or a-z characters
-    pub fn is_valid(&self) -> bool {
-        if self.is_reserved_bit_valid() == true {
+    pub fn _is_valid(&self) -> bool {
+        if self._is_reserved_bit_valid() == true {
             for byte in self.bytes() {
                 if byte.is_ascii_lowercase() == false && byte.is_ascii_uppercase() == false {
                     return false;
@@ -41,7 +41,7 @@ impl ChunkType {
     /// # Examples
     /// ChunkType::from_str("RuSt").unwrap();
     ///  assert_eq!(expected, actual);
-    pub fn is_critical(&self) -> bool {
+    pub fn _is_critical(&self) -> bool {
         let byte_to_check = self.bytes()[0];
         if byte_to_check & 0b00100000 == 32 {
             return false;
@@ -51,7 +51,7 @@ impl ChunkType {
 
     /// Spec : Private bit: bit 5 of second byte
     /// 0 (uppercase) = public, 1 (lowercase) = private.
-    pub fn is_public(&self) -> bool {
+    pub fn _is_public(&self) -> bool {
         let byte_to_check = self.bytes()[1];
         if byte_to_check & 0b00100000 == 32 {
             return false;
@@ -61,7 +61,7 @@ impl ChunkType {
 
     /// Reserved bit: bit 5 of third byte
     /// Must be 0 (uppercase) in files conforming to this version of PNG.
-    pub fn is_reserved_bit_valid(&self) -> bool {
+    pub fn _is_reserved_bit_valid(&self) -> bool {
         let byte_to_check = self.bytes()[2];
         if byte_to_check & 0b00100000 == 32 {
             return false;
@@ -71,7 +71,7 @@ impl ChunkType {
 
     ///Safe-to-copy bit: bit 5 of fourth byte
     /// 0 (uppercase) = unsafe to copy, 1 (lowercase) = safe to copy.
-    pub fn is_safe_to_copy(&self) -> bool {
+    pub fn _is_safe_to_copy(&self) -> bool {
         let byte_to_check = self.bytes()[3];
         if byte_to_check & 0b00100000 == 0 {
             return false;
@@ -142,61 +142,61 @@ mod tests {
     #[test]
     pub fn test_chunk_type_is_critical() {
         let chunk = ChunkType::from_str("RuSt").unwrap();
-        assert!(chunk.is_critical());
+        assert!(chunk._is_critical());
     }
 
     #[test]
     pub fn test_chunk_type_is_not_critical() {
         let chunk = ChunkType::from_str("ruSt").unwrap();
-        assert!(!chunk.is_critical());
+        assert!(!chunk._is_critical());
     }
 
     #[test]
     pub fn test_chunk_type_is_public() {
         let chunk = ChunkType::from_str("RUSt").unwrap();
-        assert!(chunk.is_public());
+        assert!(chunk._is_public());
     }
 
     #[test]
     pub fn test_chunk_type_is_not_public() {
         let chunk = ChunkType::from_str("RuSt").unwrap();
-        assert!(!chunk.is_public());
+        assert!(!chunk._is_public());
     }
 
     #[test]
     pub fn test_chunk_type_is_reserved_bit_valid() {
         let chunk = ChunkType::from_str("RuSt").unwrap();
-        assert!(chunk.is_reserved_bit_valid());
+        assert!(chunk._is_reserved_bit_valid());
     }
 
     #[test]
     pub fn test_chunk_type_is_reserved_bit_invalid() {
         let chunk = ChunkType::from_str("Rust").unwrap();
-        assert!(!chunk.is_reserved_bit_valid());
+        assert!(!chunk._is_reserved_bit_valid());
     }
 
     #[test]
     pub fn test_chunk_type_is_safe_to_copy() {
         let chunk = ChunkType::from_str("RuSt").unwrap();
-        assert!(chunk.is_safe_to_copy());
+        assert!(chunk._is_safe_to_copy());
     }
 
     #[test]
     pub fn test_chunk_type_is_unsafe_to_copy() {
         let chunk = ChunkType::from_str("RuST").unwrap();
-        assert!(!chunk.is_safe_to_copy());
+        assert!(!chunk._is_safe_to_copy());
     }
 
     #[test]
     pub fn test_valid_chunk_is_valid() {
         let chunk = ChunkType::from_str("RuSt").unwrap();
-        assert!(chunk.is_valid());
+        assert!(chunk._is_valid());
     }
 
     #[test]
     pub fn test_invalid_chunk_is_valid() {
         let chunk = ChunkType::from_str("Rust").unwrap();
-        assert!(!chunk.is_valid());
+        assert!(!chunk._is_valid());
 
         let chunk = ChunkType::from_str("Ru1t");
         assert!(chunk.is_err());

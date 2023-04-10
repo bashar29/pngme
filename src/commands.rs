@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use crate::{Result, png::Png, chunk_type::{ChunkType, self}, chunk::Chunk};
+use crate::{Result, png::Png, chunk_type::{ChunkType}, chunk::Chunk};
 use std::fs::File;
 use std::io::Write;
 

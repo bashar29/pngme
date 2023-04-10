@@ -28,7 +28,7 @@ impl Chunk {
         chunk
     }
 
-    pub fn length(&self) -> u32 {
+    pub fn _length(&self) -> u32 {
         dbg!(self.chunk_length);
         self.chunk_length
     }
@@ -37,12 +37,12 @@ impl Chunk {
         &self.chunk_type
     }
 
-    pub fn data(&self) -> &[u8] {
+    pub fn _data(&self) -> &[u8] {
         let data: &[u8] = self.chunk_data.as_slice();
         data
     }
 
-    pub fn crc(&self) -> u32 {
+    pub fn _crc(&self) -> u32 {
         self.chunk_crc
     }
 
@@ -151,14 +151,14 @@ mod tests {
             .as_bytes()
             .to_vec();
         let chunk = Chunk::new(chunk_type, data);
-        assert_eq!(chunk.length(), 42);
-        assert_eq!(chunk.crc(), 2882656334);
+        assert_eq!(chunk._length(), 42);
+        assert_eq!(chunk._crc(), 2882656334);
     }
 
     #[test]
     fn test_chunk_length() {
         let chunk = testing_chunk();
-        assert_eq!(chunk.length(), 42);
+        assert_eq!(chunk._length(), 42);
     }
 
     #[test]
@@ -178,7 +178,7 @@ mod tests {
     #[test]
     fn test_chunk_crc() {
         let chunk = testing_chunk();
-        assert_eq!(chunk.crc(), 2882656334);
+        assert_eq!(chunk._crc(), 2882656334);
     }
 
     #[test]
@@ -202,10 +202,10 @@ mod tests {
         let chunk_string = chunk.data_as_string().unwrap();
         let expected_chunk_string = String::from("This is where your secret message will be!");
 
-        assert_eq!(chunk.length(), 42);
+        assert_eq!(chunk._length(), 42);
         assert_eq!(chunk.chunk_type().to_string(), String::from("RuSt"));
         assert_eq!(chunk_string, expected_chunk_string);
-        assert_eq!(chunk.crc(), 2882656334);
+        assert_eq!(chunk._crc(), 2882656334);
     }
 
     #[test]
