@@ -14,7 +14,7 @@ pub struct Png {
 impl Png {
     pub const STANDARD_HEADER: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
 
-    fn from_chunks(chunks: Vec<Chunk>) -> Png {
+    pub fn from_chunks(chunks: Vec<Chunk>) -> Png {
         let header = Self::STANDARD_HEADER;
         //let chunk_ihdr = Chunk::new(ChunkType::TryFrom([0x49, 0x48, 0x44, 0x52]), Vec::new());
         // vérifier que le premier chunk est de type IHDR
@@ -28,8 +28,8 @@ impl Png {
         }
 
         let png: Png = Png {
-            header: header,
-            chunks: chunks,
+            header,
+            chunks,
         };
         png
     }
@@ -53,14 +53,12 @@ impl Png {
         self.chunks.insert(self.chunks.len() - 2, chunk);
     }
 
-    pub fn _remove_chunk(&mut self, chunk_type: &str) -> Result<Chunk> {
-        let mut index = 0;
-        for c in &self.chunks {
+    pub fn remove_chunk(&mut self, chunk_type: &str) -> Result<Chunk> {
+        for (index,c) in self.chunks.iter().enumerate() {
             if c.chunk_type().to_string() == chunk_type {
                 let removed_chunk = self.chunks.remove(index);
                 return Ok(removed_chunk);
             }
-            index += 1;
         }
         bail!("chunk type not found in this png");
     }
@@ -73,18 +71,19 @@ impl Png {
         self.chunks.as_slice()
     }
 
-    pub fn _chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
-        for c in &self.chunks {
-            if c.chunk_type().to_string() == chunk_type {
-                return Some(&c);
-            }
-        }
-        None
+    pub fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
+        // for c in &self.chunks {
+        //     if c.chunk_type().to_string() == chunk_type {
+        //         return Some(c);
+        //     }
+        // }
+        // None
+        self.chunks.iter().find(|&c| c.chunk_type().to_string() == chunk_type)
     }
 
     pub fn as_bytes(&self) -> Vec<u8> {
         let mut v = Vec::new();
-        v.append(&mut self.header.to_vec().clone());
+        v.append(&mut self.header.to_vec());
         for c in &self.chunks {
             v.append(&mut c.as_bytes().clone());
         }
@@ -156,11 +155,8 @@ mod tests {
     }
 
     fn chunk_from_strings(chunk_type: &str, data: &str) -> Result<Chunk> {
-        use std::str::FromStr;
-
         let chunk_type = ChunkType::from_str(chunk_type)?;
         let data: Vec<u8> = data.bytes().collect();
-
         Ok(Chunk::new(chunk_type, data))
     }
 
@@ -240,7 +236,7 @@ mod tests {
     #[test]
     fn test_chunk_by_type() {
         let png = testing_png();
-        let chunk = png._chunk_by_type("FrSt").unwrap();
+        let chunk = png.chunk_by_type("FrSt").unwrap();
         assert_eq!(&chunk.chunk_type().to_string(), "FrSt");
         assert_eq!(&chunk.data_as_string().unwrap(), "I am the first chunk");
     }
@@ -249,7 +245,7 @@ mod tests {
     fn test_append_chunk() {
         let mut png = testing_png();
         png.append_chunk(chunk_from_strings("TeSt", "Message").unwrap());
-        let chunk = png._chunk_by_type("TeSt").unwrap();
+        let chunk = png.chunk_by_type("TeSt").unwrap();
         assert_eq!(&chunk.chunk_type().to_string(), "TeSt");
         assert_eq!(&chunk.data_as_string().unwrap(), "Message");
     }
@@ -258,8 +254,8 @@ mod tests {
     fn test_remove_chunk() {
         let mut png = testing_png();
         png.append_chunk(chunk_from_strings("TeSt", "Message").unwrap());
-        png._remove_chunk("TeSt").unwrap();
-        let chunk = png._chunk_by_type("TeSt");
+        png.remove_chunk("TeSt").unwrap();
+        let chunk = png.chunk_by_type("TeSt");
         assert!(chunk.is_none());
     }
 

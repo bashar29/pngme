@@ -17,13 +17,13 @@ impl Chunk {
 
     pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
         let chunk_length: u32 = data.len().try_into().unwrap();
-        let chunk_crc = Self::calculate_crc(&chunk_type.bytes().to_vec(), &data);
+        let chunk_crc = Self::calculate_crc(chunk_type.bytes().as_ref(), &data);
 
         let chunk: Chunk = Chunk {
-            chunk_length: chunk_length,
-            chunk_type: chunk_type,
+            chunk_length,
+            chunk_type,
             chunk_data: data,
-            chunk_crc: chunk_crc,
+            chunk_crc,
         };
         chunk
     }
@@ -60,13 +60,12 @@ impl Chunk {
         bytes
     }
 
-    pub fn calculate_crc(chunk_type: &Vec<u8>, chunk_data: &Vec<u8>) -> u32 {
+    pub fn calculate_crc(chunk_type: &[u8], chunk_data: &[u8]) -> u32 {
         let mut crc_input = Vec::new();
-        crc_input.append(&mut chunk_type.clone());
-        crc_input.append(&mut chunk_data.clone());
+        crc_input.append(&mut chunk_type.to_owned());
+        crc_input.append(&mut chunk_data.to_owned());
         let crc: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
-        let chunk_crc = crc.checksum(&crc_input);
-        chunk_crc
+        crc.checksum(&crc_input)
     }
 }
 
@@ -92,16 +91,16 @@ impl TryFrom<&[u8]> for Chunk {
             array[array_length - 2],
             array[array_length - 1],
         ]);
-        let expected_crc = Chunk::calculate_crc(&chunk_type.bytes().to_vec(), &data.to_vec());
+        let expected_crc = Chunk::calculate_crc(chunk_type.bytes().as_ref(), data);
         if expected_crc != chunk_crc {
             bail!("CRC error");
         }
 
         let chunk = Chunk {
-            chunk_length: chunk_length,
-            chunk_type: chunk_type,
+            chunk_length,
+            chunk_type,
             chunk_data: v_data,
-            chunk_crc: chunk_crc,
+            chunk_crc,
         };
         Ok(chunk)
     }
@@ -110,11 +109,11 @@ impl TryFrom<&[u8]> for Chunk {
 impl Display for Chunk {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = self.chunk_length.to_string()
-            + &" ".to_string()
+            + " "
             + &self.chunk_type.to_string()
-            + &" ".to_string()
+            + " "
             + &self.data_as_string().unwrap()
-            + &" ".to_string()
+            + " "
             + &self.chunk_crc.to_string();
         write!(f, "{}", s)
     }

@@ -11,10 +11,8 @@ impl ChunkType {
     pub fn bytes(&self) -> [u8; 4] {
         let mut bytes: [u8; 4] = [0, 0, 0, 0];
 
-        let mut cpt = 0;
-        for b in self.type_str.as_bytes() {
+        for (cpt,b) in self.type_str.as_bytes().iter().enumerate() {
             bytes[cpt] = *b;
-            cpt += 1;
         }
         //dbg!(&bytes);
         bytes
@@ -23,9 +21,9 @@ impl ChunkType {
     /// Valid if reserved bit is valid and all bytes are represented
     /// by A-Z or a-z characters
     pub fn _is_valid(&self) -> bool {
-        if self._is_reserved_bit_valid() == true {
+        if self._is_reserved_bit_valid() {
             for byte in self.bytes() {
-                if byte.is_ascii_lowercase() == false && byte.is_ascii_uppercase() == false {
+                if !byte.is_ascii_lowercase() && !byte.is_ascii_uppercase() {
                     return false;
                 }
             }
@@ -85,7 +83,7 @@ impl TryFrom<[u8; 4]> for ChunkType {
 
     fn try_from(array: [u8; 4]) -> Result<Self, Self::Error> {
         for b in array {
-            if b.is_ascii() == false {
+            if !b.is_ascii() {
                 bail!("Input not in A-Z or a-z");
             }
         }
@@ -101,7 +99,7 @@ impl std::str::FromStr for ChunkType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         for b in s.as_bytes() {
-            if b.is_ascii_lowercase() == false && b.is_ascii_uppercase() == false {
+            if !b.is_ascii_lowercase() && !b.is_ascii_uppercase() {
                 bail!("Input not in A-Z or a-z");
             }
         }

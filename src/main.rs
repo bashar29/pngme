@@ -5,7 +5,7 @@ mod commands;
 mod png;
 use args::{PngMeArgs, PnnmeFunctions};
 use clap::Parser;
-use log::{debug, error, info, warn};
+use log::{debug, error, info};
 
 //pub type Error = Box<dyn std::error::Error>;
 pub type Error = anyhow::Error;
