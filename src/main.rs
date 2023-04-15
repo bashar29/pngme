@@ -1,8 +1,8 @@
 mod args;
 mod chunk;
 mod chunk_type;
-mod png;
 mod commands;
+mod png;
 use args::{PngMeArgs, PnnmeFunctions};
 use clap::Parser;
 use log::{debug, error, info, warn};
@@ -14,7 +14,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 fn main() -> Result<()> {
     env_logger::init();
     let cmd = PngMeArgs::parse();
-    info!("arguments : {:?}",cmd);
+    info!("arguments : {:?}", cmd);
     match cmd.command_type {
         PnnmeFunctions::Encode(args) => {
             match commands::encode(

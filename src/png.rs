@@ -126,7 +126,7 @@ impl TryFrom<&[u8]> for Png {
             chunks.push(chunk);
             index += chunk_len as usize + 12; // 3 * 4-bytes data not included in chunk_len
         }
-        log::info!("nombre de chunks de ce png : {}",chunks.len());
+        log::info!("nombre de chunks de ce png : {}", chunks.len());
         let png: Png = Png::from_chunks(chunks);
         Ok(png)
     }
