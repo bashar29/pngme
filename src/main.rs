@@ -37,11 +37,11 @@ fn main() -> Result<()> {
             }
         }
         PnnmeFunctions::Remove(args) => {
-            match commands::remove(&args.file_to_remove, args.type_chunk) {
+            match commands::remove(&args.file_to_clean, args.type_chunk) {
                 Ok(f) => info!("file cleaned of the message : {}", f.display()),
                 Err(e) => error!(
                     "failed to clean the file {} : {}",
-                    &args.file_to_remove.display(),
+                    &args.file_to_clean.display(),
                     e
                 ),
             }
